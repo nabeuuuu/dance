@@ -1,10 +1,10 @@
 // 🖼️ Liste de tes images locales
 const images = [
-  "images/caracter_Dancetech_01.png",
-  "images/caracter_Dancetech_02.png",
-  "images/caracter_Dancetech_03.png",
-  "images/caracter_Dancetech_04.png",
-  "images/caracter_Dancetech_04.png"
+  "images/caracter_Danctech_01.png",
+  "images/caracter_Danctech_02.png",
+  "images/caracter_Danctech_03.png",
+  "images/caracter_Danctech_04.png",
+  "images/caracter_Danctech_05.png"
 
 ];
 
@@ -50,7 +50,6 @@ function startSlideshow() {
 // ⏹️ Arrête le diaporama
 function stopSlideshow() {
   clearInterval(intervalId);
-  intervalId = null;
 }
 
 // 🧠 Événements des boutons
