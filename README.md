@@ -29,11 +29,10 @@ découpage des bouts de code pour le projet (fonctionnalités) :
   }});
 ```
 
-**Appliquer un son avec des touches**
+  **Changer la vitesse d'affichage**
 
 
-
-```let osc;
+let osc;
 function setup() {
   createCanvas(400, 200);
   textAlign(CENTER, CENTER);
@@ -49,5 +48,21 @@ function keyPressed() {
 
 function keyReleased() {
   osc.amp(0, 0.2);
-}```
+}
 
+
+  **Création de formes pour le background**
+
+  function setup() {
+  createCanvas(400, 400);
+}
+function draw() {
+  background("aqua");
+}
+if (mouseIsPressed === true) {
+  fill(0);
+} else {
+  fill(255);
+}
+
+circle(mouseX, mouseY, 100);
