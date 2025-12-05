@@ -1,21 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
-	<meta charset="utf-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dance - Creative Coding</title>
+  <link rel="stylesheet" href="style.css"> <!-- ✅ AJOUTER CETTE LIGNE -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5.gif@0.0.2/p5.gif.js"></script>
+  <style>
+    
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Franklin Gothic Medium',  sans-serif, sans-serif;
+    }
 
-	<script src="https://q5js.org/q5.js"></script>
-	
-	<script src="https://p5play.org/v3/planck.min.js"></script>
-	<script src="https://p5play.org/v3/p5play.js"></script>
+    #controls {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(236, 236, 236, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      z-index: 100;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 250px;
+    }
 
-	<script src="sketch.js"></script>
-	
-	<link rel="stylesheet" type="text/css" href="style.css">
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    input[type="color"] {
+      width: 60px;
+      height: 35px;
+      cursor: pointer;
+      border: none;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #333;
+      color: white;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    #image {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      max-width: 200px;
+      max-height: 300px;
+      border: 2px solid #f1f1f1;
+      object-fit: contain;
+    }
+
+    .value-display {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
 </head>
 
-<body>   
-	
+<body>
+ 
+  <div id="startMessage">
+  <p>Appuyer sur START pour commencer</p>
+</div>
+
+  <!-- 🎮 CONTROLES -->
+  <div id="controls">
+    <h3 style="margin-top: 0;"> Creative Tools</h3>
+    <!-- 📊 VITESSE D'AFFICHAGE -->
+    <div class="control-group">
+      <label>⏱ Vitesse (FPS)</label>
+      <input type="range" id="delayRange" min="15" max="50" value="30" step="1">
+      <span class="value-display" id="delayValue">30 FPS</span>
+    </div> 
+
+    <!-- 🎨 COULEUR DES STROKES -->
+    <div class="control-group">
+      <label> Couleur des strokes</label>
+      <input type="color" id="strokeColor" value="#ff0000">
+    </div>
+
+    <!-- 📐 FORME -->
+<div class="control-group">
+  <label> Forme</label>
+  <div class="button-group">
+    <button id="circleBtn">Circle</button>
+    <button id="squareBtn">Square</button>
+    <button id="triangleBtn">Triangle</button>
+    <button id="starBtn">Star</button>
+    <button id="bezierBtn">∿Bezier</button>
+    <button id="saveBtn" style="width: 100%;">📸 Sauvegarder JPG</button>
+  <button id="saveGifBtn" style="width: 100%; margin-top: 5px;">🎬 Télécharger GIF</button>
+  </div>
+</div>
+    <!-- ▶️ DIAPORAMA -->
+    <div class="control-group">
+      <label> Diaporama</label>
+      <div class="button-group">
+        <button id="startBtn"> Start</button>
+        <button id="stopBtn"> Stop</button>
+      </div>
+    </div>
+
+    <!-- 💾 EXPORT -->
+    <div class="control-group">
+      <button id="saveBtn" style="width: 100%;">Sauvegarder</button>
+    </div>
+  </div>
+
+  <!-- 📄 SCRIPTS -->
+  <script src="sketch.js"></script>
 </body>
 
 </html>

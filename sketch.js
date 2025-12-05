@@ -1,155 +1,225 @@
-/**
- * Made with p5play!
- * https://p5play.org
- */
+// ----------------------------
+// VARIABLES GLOBALES
+// ----------------------------
+let imagePaths = [
+  "images/caracter_Danctech_01.png",
+  "images/caracter_Danctech_02.png",
+  "images/caracter_Danctech_03.png",
+  "images/caracter_Danctech_04.png",
+  "images/caracter_Danctech_05.png"
+];
+let index = 0;
+let delay = 2000;
+let timer;
+let playing = false;
+let drawingEnabled = false; // ✅ NOUVEAU : contrôler si le dessin est actif
 
-let player, groundSensor, grass, water, coins;
-let grassImg, waterImg, coinsImg, charactersImg;
+let currentShapeType = "bezier";
+let strokeColorValue = "#ff0000";
 
-let score = 0;
-
-function preload() {
-	new Canvas(200, 160);
-	displayMode('maxed', 'smooth');
-	
-	grassImg = loadImage('grass.png');
-	waterImg = loadImage('water.png');
-	coinsImg = loadImage('coin.png');
-	charactersImg = loadImage('buff_kangaroo1.jpg');
-}
-
+// ----------------------------
+// SETUP
+// ----------------------------
 function setup() {
-	world.gravity.y = 10;
-	allSprites.pixelPerfect = true;
+  // ✅ Canvas en plein écran
+  createCanvas(windowWidth, windowHeight);
+  background(30);
+  noFill();
 
-	grass = new Group();
-	grass.layer = 0;
-	grass.collider = 'static';
-	grass.img = grassImg;
-	grass.tile = 'g';
+  // 🎮 EVENT LISTENERS CONTROLES
+  const delayRange = document.getElementById("delayRange");
+  const delayValue = document.getElementById("delayValue");
+  const strokeColorInput = document.getElementById("strokeColor");
+  
+  if (delayRange) {
+    delayRange.addEventListener("input", (e) => {
+      const fps = parseInt(e.target.value, 10);
+      delay = Math.round(1000 / fps); // ✅ Convertir FPS en milliseconds
+      if (delayValue) delayValue.textContent = fps + " FPS";
+      if (playing) restartSlideshow();
+      console.log("FPS changé à:", fps, "| Delay:", delay, "ms");
+    });
+  }
 
-	water = new Group();
-	water.layer = 2;
-	water.collider = 'static';
-	water.img = waterImg;
-	water.h = 8;
-	water.tile = 'w';
+  if (strokeColorInput) {
+    strokeColorInput.addEventListener("input", (e) => {
+      strokeColorValue = e.target.value;
+      console.log("Couleur changée à:", strokeColorValue);
+    });
+  }
 
-	coins = new Group();
-	coins.collider = 'static';
-	coins.spriteSheet = coinsImg;
-	coins.addAni({ w: 16, h: 16, row: 0, frames: 14 });
-	coins.tile = 'c';
+  document.getElementById("circleBtn").addEventListener("click", () => {
+    currentShapeType = "circle";
+    console.log("Forme: circle");
+  });
+  document.getElementById("squareBtn").addEventListener("click", () => {
+    currentShapeType = "square";
+    console.log("Forme: square");
+  });
+  document.getElementById("triangleBtn").addEventListener("click", () => {
+    currentShapeType = "triangle";
+    console.log("Forme: triangle");
+  });
+  document.getElementById("starBtn").addEventListener("click", () => {
+    currentShapeType = "star";
+    console.log("Forme: star");
+  });
+  document.getElementById("bezierBtn").addEventListener("click", () => {
+    currentShapeType = "bezier";
+    console.log("Forme: bezier");
+  });
 
-	new Tiles(
-		[
-			'cc',
-			'gg                                     g',
-			' ',
-			'   gg',
-			'       c                        c  g',
-			'      ggg    c                  g',
-			'            ggg             g                 ccc',
-			'                                              ccc',
-			'     c c c       c c                          ccc',
-			'gggggggggggwwwwwggggg  ggggggggggg            ggg'
-		],
-		8,
-		8,
-		16,
-		16
-	);
+  document.getElementById("startBtn").addEventListener("click", startSlideshow);
+  document.getElementById("stopBtn").addEventListener("click", stopSlideshow);
 
-	player = new Sprite(48, 100, 12, 12);
-	player.layer = 1;
-	player.anis.w = 16;
-	player.anis.h = 16;
-	player.anis.offset.y = 1;
-	player.anis.frameDelay = 8;
-	player.spriteSheet = charactersImg;
-	player.addAnis({
-		idle: { row: 0, frames: 4 },
-		knockback: { row: 0, frames: 1 },
-		run: { row: 1, frames: 3 },
-		jump: { row: 1, col: 3, frames: 2 }
-	});
-	player.ani = 'idle';
-	player.rotationLock = true;
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    save("creative_dance_" + Date.now() + ".jpg");
+  });
 
-	// IMPORTANT! prevents the player from sticking to the sides of walls
-	player.friction = 0;
-
-	player.overlaps(coins, collectCoin);
-
-	// This groundSensor sprite is used to check if the player
-	// is close enough to the ground to jump. But why not use
-	// `player.colliding(grass)`? Because then the player could
-	// jump if they were touching the side of a wall!
-	// Also the player's collider bounces a bit when it hits
-	// the ground, even if its bounciness is set to 0. When
-	// making a platformer game, you want the player to 
-	// be able to jump right after they land.
-	// This approach was inspired by this tutorial:
-	// https://www.iforce2d.net/b2dtut/jumpability
-	groundSensor = new Sprite(48, 106, 6, 12, 'n');
-	groundSensor.visible = false;
-	groundSensor.mass = 0.01;
-	
-	let j = new GlueJoint(player, groundSensor);
-	j.visible = false;
-
-	textAlign(CENTER);
+  document.getElementById("saveGifBtn").addEventListener("click", () => {
+    saveGif("creative_dance_" + Date.now(), 5); // 5 secondes de GIF
+    console.log("🎬 GIF en cours de téléchargement...");
+  });
 }
 
-function collectCoin(player, coin) {
-	coin.remove();
-	score++;
+// ----------------------------
+// DRAW LOOP
+// ----------------------------
+function draw() {
+  if (!drawingEnabled) {
+    return;
+  }
+
+  stroke(strokeColorValue);
+  strokeWeight(2);
+
+  switch (currentShapeType) {
+    case "circle":
+      drawCircle();
+      break;
+    case "square":
+      drawSquare();
+      break;
+    case "triangle":
+      drawTriangle();
+      break;
+    case "star":
+      drawStar();
+      break;
+    case "bezier":
+      drawBezier();
+      break;
+  }
 }
 
-function update() {
-	background('skyblue');
-	fill(255);
-
-	text('Score: ' + score, 160, 20);
-
-	// make the player slower in water
-	if (groundSensor.overlapping(water)) {
-		player.drag = 20;
-		player.friction = 10;
-	} else {
-		player.drag = 0;
-		player.friction = 0;
-	}
-
-	if (groundSensor.overlapping(grass) ||
-			groundSensor.overlapping(water)) {
-		if (kb.presses('up') || kb.presses('space')) {
-			player.ani = 'jump';
-			player.vel.y = -4.5;
-		}
-	}
-
-	if (kb.pressing('left')) {
-		player.ani = 'run';
-		player.vel.x = -1.5;
-		player.mirror.x = true;
-	} else if (kb.pressing('right')) {
-		player.ani = 'run';
-		player.vel.x = 1.5;
-		player.mirror.x = false;
-	} else {
-		player.ani = 'idle';
-		player.vel.x = 0;
-	}
-
-	// if player falls, reset them
-	if (player.y > 400) {
-		player.speed = 0;
-		player.x = 48;
-		player.y = 100;
-	}
+// ----------------------------
+// FORMES
+// ----------------------------
+function drawStar() {
+  let x = random(windowWidth);
+  let y = random(windowHeight);
+  let size = random(20, 80);
+  let points = 5;
+  
+  push();
+  translate(x, y);
+  rotate(random(TWO_PI));
+  
+  beginShape();
+  for (let i = 0; i < TWO_PI; i += TWO_PI / points) {
+    let sx1 = cos(i) * size;
+    let sy1 = sin(i) * size;
+    vertex(sx1, sy1);
+    
+    let sx2 = cos(i + TWO_PI / (points * 2)) * (size * 0.5);
+    let sy2 = sin(i + TWO_PI / (points * 2)) * (size * 0.5);
+    vertex(sx2, sy2);
+  }
+  endShape(CLOSE);
+  
+  pop();
 }
 
-function drawFrame() {
-	camera.x = player.x + 52;
+function drawBezier() {
+  bezier(random(windowWidth), random(windowHeight), random(windowWidth), random(windowHeight),
+    random(windowWidth), random(windowHeight), random(windowWidth), random(windowHeight));
+}
+
+function drawCircle() {
+  let x = random(windowWidth);
+  let y = random(windowHeight);
+  let size = random(20, 100);
+  circle(x, y, size);
+}
+
+function drawSquare() {
+  let x = random(windowWidth);
+  let y = random(windowHeight);
+  let size = random(20, 100);
+  square(x, y, size);
+}
+
+function drawTriangle() {
+  let x1 = random(windowWidth);
+  let y1 = random(windowHeight);
+  let x2 = random(windowWidth);
+  let y2 = random(windowHeight);
+  let x3 = random(windowWidth);
+  let y3 = random(windowHeight);
+  triangle(x1, y1, x2, y2, x3, y3);
+}
+
+// ----------------------------
+// SLIDESHOW
+// ----------------------------
+function startSlideshow() {
+  if (!playing) {
+    playing = true;
+    drawingEnabled = true;
+    
+    // ✅ Masquer le message de démarrage
+    const startMessage = document.getElementById("startMessage");
+    if (startMessage) {
+      startMessage.classList.add("hidden");
+    }
+    
+    nextImage();
+    timer = setInterval(nextImage, delay);
+    console.log("🎬 Diaporama démarré + dessin activé");
+  }
+}
+
+function stopSlideshow() {
+  playing = false;
+  drawingEnabled = false;
+  clearInterval(timer);
+  
+  // ✅ Afficher le message de démarrage à nouveau (optionnel)
+  const startMessage = document.getElementById("startMessage");
+  if (startMessage) {
+    startMessage.classList.remove("hidden");
+  }
+  
+  console.log("⏹️ Diaporama arrêté + dessin désactivé");
+}
+
+function restartSlideshow() {
+  clearInterval(timer);
+  timer = setInterval(nextImage, delay);
+}
+
+function nextImage() {
+  index = (index + 1) % imagePaths.length;
+  const imgElement = document.getElementById("image");
+  if (imgElement) {
+    imgElement.src = imagePaths[index];
+  }
+}
+
+// ----------------------------
+// RESPONSIVE
+// ----------------------------
+function windowResized() {
+  // ✅ Redimensionne le canvas quand la fenêtre change
+  resizeCanvas(windowWidth, windowHeight);
 }
