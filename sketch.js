@@ -8,20 +8,34 @@ let imagePaths = [
   "images/caracter_Danctech_04.png",
   "images/caracter_Danctech_05.png"
 ];
+
+// ✅ NOUVEAU : Palette de couleurs primaires et secondaires avec teintes
+let colorPalettes = {
+  red: ["#FF0000", "#FF4444", "#FF8888", "#FF1111", "#CC0000", "#990000"],
+  blue: ["#0000FF", "#4444FF", "#8888FF", "#1111FF", "#0000CC", "#000099"],
+  yellow: ["#FFFF00", "#FFFF44", "#FFFF88", "#FFFF11", "#CCCC00", "#999900"],
+  green: ["#00FF00", "#44FF44", "#88FF88", "#11FF11", "#00CC00", "#009900"],
+  orange: ["#FF8800", "#FFAA44", "#FFBB88", "#FF9911", "#CC6600", "#994400"],
+  purple: ["#AA00FF", "#BB44FF", "#CC88FF", "#BB11FF", "#8800CC", "#660099"]
+};
+
+let currentColorPalette = "red";
+let strokeColorValue = "#FF0000";
+
 let index = 0;
 let delay = 2000;
 let timer;
 let playing = false;
-let drawingEnabled = false; // ✅ NOUVEAU : contrôler si le dessin est actif
+let drawingEnabled = false;
 
 let currentShapeType = "bezier";
-let strokeColorValue = "#ff0000";
+let shapeCount = 1;
+let randomizeColors = false; // ✅ NOUVEAU : option pour aleatoire
 
 // ----------------------------
 // SETUP
 // ----------------------------
 function setup() {
-  // ✅ Canvas en plein écran
   createCanvas(windowWidth, windowHeight);
   background(30);
   noFill();
@@ -29,22 +43,65 @@ function setup() {
   // 🎮 EVENT LISTENERS CONTROLES
   const delayRange = document.getElementById("delayRange");
   const delayValue = document.getElementById("delayValue");
-  const strokeColorInput = document.getElementById("strokeColor");
+  const shapeCountInput = document.getElementById("shapeCount");
+  const shapeCountValue = document.getElementById("shapeCountValue");
+  const randomizeColorCheckbox = document.getElementById("randomizeColor"); // ✅ NOUVEAU
   
   if (delayRange) {
     delayRange.addEventListener("input", (e) => {
       const fps = parseInt(e.target.value, 10);
-      delay = Math.round(1000 / fps); // ✅ Convertir FPS en milliseconds
-      if (delayValue) delayValue.textContent = fps + " FPS";
-      if (playing) restartSlideshow();
+      delay = Math.round(1000 / fps);
+      if (delayValue) delayValue.textContent = fps + " FPS";  // ✅ AJOUTEZ CETTE LIGNE
+      if (playing) restartSlideshow();  // ✅ AJOUTEZ CETTE LIGNE
       console.log("FPS changé à:", fps, "| Delay:", delay, "ms");
     });
   }
 
-  if (strokeColorInput) {
-    strokeColorInput.addEventListener("input", (e) => {
-      strokeColorValue = e.target.value;
-      console.log("Couleur changée à:", strokeColorValue);
+  // ✅ NOUVEAU : Event listeners pour les couleurs primaires et secondaires
+  document.getElementById("colorRed").addEventListener("click", () => {
+    currentColorPalette = "red";
+    updateStrokeColor();
+    console.log("Palette: Rouge");
+  });
+  document.getElementById("colorBlue").addEventListener("click", () => {
+    currentColorPalette = "blue";
+    updateStrokeColor();
+    console.log("Palette: Bleu");
+  });
+  document.getElementById("colorYellow").addEventListener("click", () => {
+    currentColorPalette = "yellow";
+    updateStrokeColor();
+    console.log("Palette: Jaune");
+  });
+  document.getElementById("colorGreen").addEventListener("click", () => {
+    currentColorPalette = "green";
+    updateStrokeColor();
+    console.log("Palette: Vert");
+  });
+  document.getElementById("colorOrange").addEventListener("click", () => {
+    currentColorPalette = "orange";
+    updateStrokeColor();
+    console.log("Palette: Orange");
+  });
+  document.getElementById("colorPurple").addEventListener("click", () => {
+    currentColorPalette = "purple";
+    updateStrokeColor();
+    console.log("Palette: Violet");
+  });
+
+  // ✅ NOUVEAU : Checkbox pour aleatoire
+  if (randomizeColorCheckbox) {
+    randomizeColorCheckbox.addEventListener("change", (e) => {
+      randomizeColors = e.target.checked;
+      console.log("Couleurs aléatoires:", randomizeColors ? "ON" : "OFF");
+    });
+  }
+
+  if (shapeCountInput) {
+    shapeCountInput.addEventListener("input", (e) => {
+      shapeCount = parseInt(e.target.value, 10);
+      if (shapeCountValue) shapeCountValue.textContent = shapeCount;  // ✅ COMPLÉTEZ CETTE LIGNE
+      console.log("Nombre de formes changé à:", shapeCount);
     });
   }
 
@@ -72,14 +129,28 @@ function setup() {
   document.getElementById("startBtn").addEventListener("click", startSlideshow);
   document.getElementById("stopBtn").addEventListener("click", stopSlideshow);
 
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    background(30);
+    console.log("🗑️ Canvas effacé");
+  });
+
   document.getElementById("saveBtn").addEventListener("click", () => {
     save("creative_dance_" + Date.now() + ".jpg");
   });
 
   document.getElementById("saveGifBtn").addEventListener("click", () => {
-    saveGif("creative_dance_" + Date.now(), 5); // 5 secondes de GIF
+    saveGif("creative_dance_" + Date.now(), 5);
     console.log("🎬 GIF en cours de téléchargement...");
   });
+}
+
+// ✅ NOUVEAU : Fonction pour mettre à jour la couleur
+function updateStrokeColor() {
+  if (randomizeColors) {
+    strokeColorValue = random(colorPalettes[currentColorPalette]);
+  } else {
+    strokeColorValue = colorPalettes[currentColorPalette][0]; // couleur principale
+  }
 }
 
 // ----------------------------
@@ -93,22 +164,29 @@ function draw() {
   stroke(strokeColorValue);
   strokeWeight(2);
 
-  switch (currentShapeType) {
-    case "circle":
-      drawCircle();
-      break;
-    case "square":
-      drawSquare();
-      break;
-    case "triangle":
-      drawTriangle();
-      break;
-    case "star":
-      drawStar();
-      break;
-    case "bezier":
-      drawBezier();
-      break;
+  for (let i = 0; i < shapeCount; i++) {
+    // ✅ MODIFIÉ : Change de couleur à chaque forme si randomizeColors est ON
+    if (randomizeColors) {
+      stroke(random(colorPalettes[currentColorPalette]));
+    }
+
+    switch (currentShapeType) {
+      case "circle":
+        drawCircle();
+        break;
+      case "square":
+        drawSquare();
+        break;
+      case "triangle":
+        drawTriangle();
+        break;
+      case "star":
+        drawStar();
+        break;
+      case "bezier":
+        drawBezier();
+        break;
+    }
   }
 }
 
@@ -180,7 +258,7 @@ function startSlideshow() {
     // ✅ Masquer le message de démarrage
     const startMessage = document.getElementById("startMessage");
     if (startMessage) {
-      startMessage.classList.add("hidden");
+      startMessage.style.display = "none";  // ✅ AJOUTEZ CETTE LIGNE
     }
     
     nextImage();
@@ -197,7 +275,7 @@ function stopSlideshow() {
   // ✅ Afficher le message de démarrage à nouveau (optionnel)
   const startMessage = document.getElementById("startMessage");
   if (startMessage) {
-    startMessage.classList.remove("hidden");
+    startMessage.style.display = "block";  // ✅ AJOUTEZ CETTE LIGNE
   }
   
   console.log("⏹️ Diaporama arrêté + dessin désactivé");
