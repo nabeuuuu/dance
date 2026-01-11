@@ -9,7 +9,6 @@ let imagePaths = [
   "images/caracter_Danctech_05.png"
 ];
 
-// ✅ NOUVEAU : Palette de couleurs primaires et secondaires avec teintes
 let colorPalettes = {
   red: ["#FF0000", "#FF4444", "#FF8888", "#FF1111", "#CC0000", "#990000"],
   blue: ["#0000FF", "#4444FF", "#8888FF", "#1111FF", "#0000CC", "#000099"],
@@ -21,16 +20,14 @@ let colorPalettes = {
 
 let currentColorPalette = "red";
 let strokeColorValue = "#FF0000";
-
 let index = 0;
-let delay = 2000;
+let delay = Math.round(1000 / 30); // 30 FPS par défaut
 let timer;
 let playing = false;
 let drawingEnabled = false;
-
 let currentShapeType = "bezier";
 let shapeCount = 1;
-let randomizeColors = false; // ✅ NOUVEAU : option pour aleatoire
+let randomizeColors = false;
 
 // ----------------------------
 // SETUP
@@ -40,116 +37,131 @@ function setup() {
   background(30);
   noFill();
 
-  // 🎮 EVENT LISTENERS CONTROLES
+  setupEventListeners();
+}
+
+function setupEventListeners() {
+  // FPS Range
   const delayRange = document.getElementById("delayRange");
   const delayValue = document.getElementById("delayValue");
-  const shapeCountInput = document.getElementById("shapeCount");
-  const shapeCountValue = document.getElementById("shapeCountValue");
-  const randomizeColorCheckbox = document.getElementById("randomizeColor"); // ✅ NOUVEAU
   
   if (delayRange) {
     delayRange.addEventListener("input", (e) => {
       const fps = parseInt(e.target.value, 10);
       delay = Math.round(1000 / fps);
-      if (delayValue) delayValue.textContent = fps + " FPS";  // ✅ AJOUTEZ CETTE LIGNE
-      if (playing) restartSlideshow();  // ✅ AJOUTEZ CETTE LIGNE
-      console.log("FPS changé à:", fps, "| Delay:", delay, "ms");
+      if (delayValue) delayValue.textContent = fps + " FPS";
+      if (playing) {
+        clearInterval(timer);
+        timer = setInterval(nextImage, delay);
+      }
+      console.log("✅ FPS changé à:", fps);
     });
   }
 
-  // ✅ NOUVEAU : Event listeners pour les couleurs primaires et secondaires
-  document.getElementById("colorRed").addEventListener("click", () => {
-    currentColorPalette = "red";
-    updateStrokeColor();
-    console.log("Palette: Rouge");
-  });
-  document.getElementById("colorBlue").addEventListener("click", () => {
-    currentColorPalette = "blue";
-    updateStrokeColor();
-    console.log("Palette: Bleu");
-  });
-  document.getElementById("colorYellow").addEventListener("click", () => {
-    currentColorPalette = "yellow";
-    updateStrokeColor();
-    console.log("Palette: Jaune");
-  });
-  document.getElementById("colorGreen").addEventListener("click", () => {
-    currentColorPalette = "green";
-    updateStrokeColor();
-    console.log("Palette: Vert");
-  });
-  document.getElementById("colorOrange").addEventListener("click", () => {
-    currentColorPalette = "orange";
-    updateStrokeColor();
-    console.log("Palette: Orange");
-  });
-  document.getElementById("colorPurple").addEventListener("click", () => {
-    currentColorPalette = "purple";
-    updateStrokeColor();
-    console.log("Palette: Violet");
-  });
-
-  // ✅ NOUVEAU : Checkbox pour aleatoire
-  if (randomizeColorCheckbox) {
-    randomizeColorCheckbox.addEventListener("change", (e) => {
-      randomizeColors = e.target.checked;
-      console.log("Couleurs aléatoires:", randomizeColors ? "ON" : "OFF");
-    });
-  }
-
+  // Shape Count
+  const shapeCountInput = document.getElementById("shapeCount");
+  const shapeCountValue = document.getElementById("shapeCountValue");
+  
   if (shapeCountInput) {
     shapeCountInput.addEventListener("input", (e) => {
       shapeCount = parseInt(e.target.value, 10);
-      if (shapeCountValue) shapeCountValue.textContent = shapeCount;  // ✅ COMPLÉTEZ CETTE LIGNE
-      console.log("Nombre de formes changé à:", shapeCount);
+      if (shapeCountValue) shapeCountValue.textContent = shapeCount;
+      console.log("✅ Formes par frame:", shapeCount);
     });
   }
 
-  document.getElementById("circleBtn").addEventListener("click", () => {
-    currentShapeType = "circle";
-    console.log("Forme: circle");
-  });
-  document.getElementById("squareBtn").addEventListener("click", () => {
-    currentShapeType = "square";
-    console.log("Forme: square");
-  });
-  document.getElementById("triangleBtn").addEventListener("click", () => {
-    currentShapeType = "triangle";
-    console.log("Forme: triangle");
-  });
-  document.getElementById("starBtn").addEventListener("click", () => {
-    currentShapeType = "star";
-    console.log("Forme: star");
-  });
-  document.getElementById("bezierBtn").addEventListener("click", () => {
-    currentShapeType = "bezier";
-    console.log("Forme: bezier");
+  // Randomize Colors
+  const randomizeColorCheckbox = document.getElementById("randomizeColor");
+  if (randomizeColorCheckbox) {
+    randomizeColorCheckbox.addEventListener("change", (e) => {
+      randomizeColors = e.target.checked;
+      console.log("✅ Couleurs aléatoires:", randomizeColors ? "ON" : "OFF");
+    });
+  }
+
+  // Color Palettes
+  const colorButtons = {
+    colorRed: "red",
+    colorBlue: "blue",
+    colorYellow: "yellow",
+    colorGreen: "green",
+    colorOrange: "orange",
+    colorPurple: "purple"
+  };
+
+  Object.entries(colorButtons).forEach(([buttonId, colorName]) => {
+    const btn = document.getElementById(buttonId);
+    if (btn) {
+      btn.addEventListener("click", () => {
+        currentColorPalette = colorName;
+        updateStrokeColor();
+        console.log("✅ Couleur sélectionnée:", colorName);
+      });
+    }
   });
 
-  document.getElementById("startBtn").addEventListener("click", startSlideshow);
-  document.getElementById("stopBtn").addEventListener("click", stopSlideshow);
+  // Shapes
+  const shapeButtons = {
+    circleBtn: "circle",
+    squareBtn: "square",
+    triangleBtn: "triangle",
+    starBtn: "star",
+    bezierBtn: "bezier"
+  };
 
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    background(30);
-    console.log("🗑️ Canvas effacé");
+  Object.entries(shapeButtons).forEach(([buttonId, shapeName]) => {
+    const btn = document.getElementById(buttonId);
+    if (btn) {
+      btn.addEventListener("click", () => {
+        currentShapeType = shapeName;
+        console.log("✅ Forme sélectionnée:", shapeName);
+      });
+    }
   });
 
-  document.getElementById("saveBtn").addEventListener("click", () => {
-    save("creative_dance_" + Date.now() + ".jpg");
-  });
+  // Start / Stop
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  
+  if (startBtn) startBtn.addEventListener("click", startSlideshow);
+  if (stopBtn) stopBtn.addEventListener("click", stopSlideshow);
 
-  document.getElementById("saveGifBtn").addEventListener("click", () => {
-    saveGif("creative_dance_" + Date.now(), 5);
-    console.log("🎬 GIF en cours de téléchargement...");
-  });
+  // Clear
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      background(30);
+      console.log("✅ Canvas effacé");
+    });
+  }
+
+  // Save
+  const saveBtn = document.getElementById("saveBtn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      saveCanvas("creative_dance_" + Date.now(), "jpg");
+      console.log("✅ JPG sauvegardé");
+    });
+  }
+
+  // Save GIF
+  const saveGifBtn = document.getElementById("saveGifBtn");
+  if (saveGifBtn) {
+    saveGifBtn.addEventListener("click", () => {
+      saveGif("creative_dance_" + Date.now(), 5);
+      console.log("✅ GIF en cours de téléchargement");
+    });
+  }
 }
 
-// ✅ NOUVEAU : Fonction pour mettre à jour la couleur
+// ----------------------------
+// COULEURS
+// ----------------------------
 function updateStrokeColor() {
   if (randomizeColors) {
     strokeColorValue = random(colorPalettes[currentColorPalette]);
   } else {
-    strokeColorValue = colorPalettes[currentColorPalette][0]; // couleur principale
+    strokeColorValue = colorPalettes[currentColorPalette][0];
   }
 }
 
@@ -161,13 +173,13 @@ function draw() {
     return;
   }
 
-  stroke(strokeColorValue);
   strokeWeight(2);
 
   for (let i = 0; i < shapeCount; i++) {
-    // ✅ MODIFIÉ : Change de couleur à chaque forme si randomizeColors est ON
     if (randomizeColors) {
       stroke(random(colorPalettes[currentColorPalette]));
+    } else {
+      stroke(strokeColorValue);
     }
 
     switch (currentShapeType) {
@@ -193,36 +205,6 @@ function draw() {
 // ----------------------------
 // FORMES
 // ----------------------------
-function drawStar() {
-  let x = random(windowWidth);
-  let y = random(windowHeight);
-  let size = random(20, 80);
-  let points = 5;
-  
-  push();
-  translate(x, y);
-  rotate(random(TWO_PI));
-  
-  beginShape();
-  for (let i = 0; i < TWO_PI; i += TWO_PI / points) {
-    let sx1 = cos(i) * size;
-    let sy1 = sin(i) * size;
-    vertex(sx1, sy1);
-    
-    let sx2 = cos(i + TWO_PI / (points * 2)) * (size * 0.5);
-    let sy2 = sin(i + TWO_PI / (points * 2)) * (size * 0.5);
-    vertex(sx2, sy2);
-  }
-  endShape(CLOSE);
-  
-  pop();
-}
-
-function drawBezier() {
-  bezier(random(windowWidth), random(windowHeight), random(windowWidth), random(windowHeight),
-    random(windowWidth), random(windowHeight), random(windowWidth), random(windowHeight));
-}
-
 function drawCircle() {
   let x = random(windowWidth);
   let y = random(windowHeight);
@@ -247,6 +229,37 @@ function drawTriangle() {
   triangle(x1, y1, x2, y2, x3, y3);
 }
 
+function drawStar() {
+  let x = random(windowWidth);
+  let y = random(windowHeight);
+  let size = random(20, 80);
+  let points = 5;
+  
+  push();
+  translate(x, y);
+  rotate(random(TWO_PI));
+  
+  beginShape();
+  for (let i = 0; i < TWO_PI; i += TWO_PI / points) {
+    let sx1 = cos(i) * size;
+    let sy1 = sin(i) * size;
+    vertex(sx1, sy1);
+    
+    let sx2 = cos(i + TWO_PI / (points * 2)) * (size * 0.5);
+    let sy2 = sin(i + TWO_PI / (points * 2)) * (size * 0.5);
+    vertex(sx2, sy2);
+  }
+  endShape(CLOSE);
+  pop();
+}
+
+function drawBezier() {
+  bezier(random(windowWidth), random(windowHeight), 
+         random(windowWidth), random(windowHeight),
+         random(windowWidth), random(windowHeight), 
+         random(windowWidth), random(windowHeight));
+}
+
 // ----------------------------
 // SLIDESHOW
 // ----------------------------
@@ -255,15 +268,14 @@ function startSlideshow() {
     playing = true;
     drawingEnabled = true;
     
-    // ✅ Masquer le message de démarrage
     const startMessage = document.getElementById("startMessage");
     if (startMessage) {
-      startMessage.style.display = "none";  // ✅ AJOUTEZ CETTE LIGNE
+      startMessage.style.display = "none";
     }
     
     nextImage();
     timer = setInterval(nextImage, delay);
-    console.log("🎬 Diaporama démarré + dessin activé");
+    console.log("🎬 Diaporama démarré");
   }
 }
 
@@ -272,18 +284,12 @@ function stopSlideshow() {
   drawingEnabled = false;
   clearInterval(timer);
   
-  // ✅ Afficher le message de démarrage à nouveau (optionnel)
   const startMessage = document.getElementById("startMessage");
   if (startMessage) {
-    startMessage.style.display = "block";  // ✅ AJOUTEZ CETTE LIGNE
+    startMessage.style.display = "block";
   }
   
-  console.log("⏹️ Diaporama arrêté + dessin désactivé");
-}
-
-function restartSlideshow() {
-  clearInterval(timer);
-  timer = setInterval(nextImage, delay);
+  console.log("⏹️ Diaporama arrêté");
 }
 
 function nextImage() {
@@ -291,6 +297,7 @@ function nextImage() {
   const imgElement = document.getElementById("image");
   if (imgElement) {
     imgElement.src = imagePaths[index];
+    imgElement.style.display = "block";
   }
 }
 
@@ -298,6 +305,5 @@ function nextImage() {
 // RESPONSIVE
 // ----------------------------
 function windowResized() {
-  // ✅ Redimensionne le canvas quand la fenêtre change
   resizeCanvas(windowWidth, windowHeight);
 }

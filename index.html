@@ -5,16 +5,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dance - Creative Coding</title>
-  <link rel="stylesheet" href="style.css"> <!-- ✅ AJOUTER CETTE LIGNE -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/p5.gif@0.0.2/p5.gif.js"></script>
   <style>
-    
     body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      font-family: 'Franklin Gothic Medium',  sans-serif, sans-serif;
+      font-family: 'Franklin Gothic Medium', sans-serif;
+    }
+
+    #startMessage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 40px;
+      border-radius: 8px;
+      font-size: 24px;
+      z-index: 50;
+      text-align: center;
     }
 
     #controls {
@@ -26,7 +38,14 @@
       border-radius: 8px;
       z-index: 100;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 250px;
+      width: 280px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
     }
 
     .control-group {
@@ -45,22 +64,23 @@
       cursor: pointer;
     }
 
-    input[type="color"] {
-      width: 60px;
-      height: 35px;
+    input[type="checkbox"] {
+      margin-right: 8px;
       cursor: pointer;
-      border: none;
     }
 
     button {
       padding: 8px 12px;
       margin-right: 5px;
+      margin-bottom: 5px;
       cursor: pointer;
       border: none;
       border-radius: 4px;
       background: #333;
       color: white;
       font-weight: bold;
+      transition: background 0.3s;
+      font-size: 12px;
     }
 
     button:hover {
@@ -81,118 +101,111 @@
       max-height: 300px;
       border: 2px solid #f1f1f1;
       object-fit: contain;
+      display: none;
     }
 
     .value-display {
       font-size: 12px;
       color: #666;
-    }
-
-    /* Styles pour les contrôles de couleurs */
-    .color-controls {
-      margin-top: 10px;
+      margin-left: 10px;
     }
 
     .color-btn {
-      width: 40px;
-      height: 40px;
-      border: none;
+      width: 35px;
+      height: 35px;
       border-radius: 4px;
       cursor: pointer;
-      margin-right: 5px;
-      display: inline-block;
+      flex: 1;
+      min-width: 25px;
+      transition: transform 0.2s;
     }
 
-    #randomizeColor {
-      margin-top: 10px;
+    .color-btn:hover {
+      transform: scale(1.1);
+      border: 2px solid #333;
     }
   </style>
 </head>
 
 <body>
- 
   <div id="startMessage">
-  <p>Appuyer sur START pour commencer</p>
-</div>
+    <p>🎬 Appuyez sur START pour commencer</p>
+  </div>
 
-  <!-- 🎮 CONTROLES -->
   <div id="controls">
-    <h3 style="margin-top: 0;"> Creative Tools</h3>
-    <!-- 📊 VITESSE D'AFFICHAGE -->
-    <div class="control-group"> -->
+    <h3>🎨 Creative Tools</h3>
+
+    <!-- VITESSE D'AFFICHAGE -->
+    <div class="control-group">
       <label>⏱ Vitesse (FPS)</label>
       <input type="range" id="delayRange" min="15" max="50" value="30" step="1">
-      <span class="value-display" id="delayValue">30 FPS</span>ue="30" step="1">
-    </div>  class="value-display" id="delayValue">30 FPS</span>
-    </div> 
-    <!-- 🎨 COULEUR DES STROKES -->
-    <div class="control-group"> -->
-      <label> Couleur du. trait</label>
-      <input type="color" id="strokeColor" value="#ff0000">
-    </div>ut type="color" id="strokeColor" value="#ff0000">
+      <span class="value-display" id="delayValue">30 FPS</span>
     </div>
-    <!-- 📐 FORME -->
+
+    <!-- FORME -->
     <div class="control-group">
-      <label>📐 Forme</label>">
+      <label>📐 Forme</label>
       <div class="button-group">
         <button id="circleBtn">Cercle</button>
-        <button id="squareBtn">Carré</button>>
-        <button id="starBtn">Étoile</button>>
-      </div>ton id="starBtn">Étoile</button>
-    </div>v>
+        <button id="squareBtn">Carré</button>
+        <button id="triangleBtn">Triangle</button>
+        <button id="starBtn">Étoile</button>
+        <button id="bezierBtn">Bezier</button>
+      </div>
     </div>
-    <!-- ▶️ DIAPORAMA -->
+
+    <!-- DIAPORAMA -->
     <div class="control-group">
       <label>▶️ Diaporama</label>
-      <div class="button-group">>
-        <button id="startBtn">Start</button>
-        <button id="stopBtn">Stop</button>n>
-      </div>ton id="stopBtn">Stop</button>
-    </div>v>
+      <div class="button-group">
+        <button id="startBtn">▶️ Start</button>
+        <button id="stopBtn">⏹️ Stop</button>
+      </div>
     </div>
-    <!-- 💾 EXPORT -->
+
+    <!-- NOMBRE DE FORMES -->
     <div class="control-group">
-      <button id="saveBtn" style="width: 100%; margin-bottom: 5px;">💾 Sauvegarder JPG</button>
-      <button id="saveGifBtn" style="width: 100%;">🎬 Télécharger GIF</button>rder JPG</button>
-    </div>ton id="saveGifBtn" style="width: 100%;">🎬 Télécharger GIF</button>
-    </div>
-    <!-- 🔢 NOMBRE DE FORMES -->
-    <div class="control-group">>
-      <label>🔢 Nombre de formes par frame</label>
+      <label>🔢 Formes par frame</label>
       <input type="range" id="shapeCount" min="1" max="20" value="1">
-      <span class="value-display" id="shapeCountValue">1</span>e="1">
-    </div>n class="value-display" id="shapeCountValue">1</span>
+      <span class="value-display" id="shapeCountValue">1</span>
     </div>
-    <!-- 🗑️ BOUTON CLEAR -->
+
+    <!-- COULEURS -->
     <div class="control-group">
-      <button id="clearBtn" style="width: 100%;">🗑️ Effacer le dessin</button>
-    </div>ton id="clearBtn" style="width: 100%;">🗑️ Effacer le dessin</button>
+      <label>🎨 Couleurs</label>
+      <div class="button-group">
+        <button id="colorRed" class="color-btn" style="background-color: #FF0000;" title="Rouge"></button>
+        <button id="colorBlue" class="color-btn" style="background-color: #0000FF;" title="Bleu"></button>
+        <button id="colorYellow" class="color-btn" style="background-color: #FFFF00; color: #000;" title="Jaune"></button>
+        <button id="colorGreen" class="color-btn" style="background-color: #00FF00; color: #000;" title="Vert"></button>
+        <button id="colorOrange" class="color-btn" style="background-color: #FF8800;" title="Orange"></button>
+        <button id="colorPurple" class="color-btn" style="background-color: #AA00FF;" title="Violet"></button>
+      </div>
     </div>
-    <!-- 🎨 Contrôles de couleurs primaires et secondaires -->
-    <div class="control-group">rs primaires et secondaires -->
-      <label>🎨 Couleurs :</label>
-      <div class="button-group">l>
-        <button id="colorRed" class="color-btn" style="background-color: #FF0000;"></button>
-        <button id="colorBlue" class="color-btn" style="background-color: #0000FF;"></button>
-        <button id="colorYellow" class="color-btn" style="background-color: #FFFF00; color: black;"></button>
-        <button id="colorGreen" class="color-btn" style="background-color: #00FF00; color: black;"></button>>
-        <button id="colorOrange" class="color-btn" style="background-color: #FF8800;"></button>k;"></button>
-        <button id="colorPurple" class="color-btn" style="background-color: #AA00FF;"></button>
-      </div>ton id="colorPurple" class="color-btn" style="background-color: #AA00FF;"></button>
-    </div>v>
-    </div>
-    <!-- ✨ Checkbox pour couleurs aléatoires -->
-    <div class="control-group">rs aléatoires -->
-      <label for="randomizeColor">
+
+    <!-- COULEURS ALEATOIRES -->
+    <div class="control-group">
+      <label>
         <input type="checkbox" id="randomizeColor">
-        ✨ Couleurs aléatoires (teintes)omizeColor">
-      </label>eurs aléatoires (teintes)
-    </div>bel>
-  </div>v>
+        ✨ Couleurs aléatoires
+      </label>
+    </div>
+
+    <!-- CLEAR -->
+    <div class="control-group">
+      <button id="clearBtn" style="width: 100%;">🗑️ Effacer</button>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="control-group">
+      <button id="saveBtn" style="width: 100%; margin-bottom: 5px;">💾 JPG</button>
+      <button id="saveGifBtn" style="width: 100%;">🎬 GIF</button>
+    </div>
   </div>
-  <!-- 📄 SCRIPTS -->
+
+  <img id="image">
+
   <script src="sketch.js"></script>
-</body>pt src="sketch.js"></script>
 </body>
-</html>
+
 </html>
